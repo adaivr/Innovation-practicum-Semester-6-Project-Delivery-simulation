@@ -1,0 +1,192 @@
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial;
+}
+
+#map {
+    width: 50%;
+    height: 100%;
+    float: left;
+}
+
+.custom-tooltip {
+    border-radius: 6px;
+}
+
+#control-panel {
+    width: 50%;
+    height: 100%;
+    float: right;
+    box-sizing: border-box;
+    overflow: auto;
+    padding: 20px;
+}
+
+.btn-blue {
+    background-color: #10069f;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-orange {
+    background-color: #ff7500;
+    color: black;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.top-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-arrow {
+    background-color: #10069f;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.date-block {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.date-label {
+    margin-right: 5px;
+}
+
+.btn-delete {
+    transition: background-color 0.3s;
+    background-color: #e6e6e6;
+    color: black;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-delete:hover {
+    background-color: #ff7500;
+}
+
+.btn-order-delete {
+    transition: background-color 0.3s;
+    background-color: #e6e6e6;
+    color: black;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 8px;
+}
+
+.btn-order-delete:hover {
+    background-color: #ff7500;
+}
+
+.btn-neworder {
+    transition: background-color 0.3s, color 0.3s;
+    background-color: #e6e6e6;
+    color: black;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-neworder:hover {
+    color: white;
+    background-color: #10069f;
+}
+
+table {
+    width: 100%;
+    margin: 0 auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid black;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: #e6e6e6;
+}
+
+thead {
+    border-bottom: 5px solid black;
+}
+
+th,
+td {
+    padding: 5px;
+    font-size: 8px;
+    text-align: left;
+    font-weight: normal;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: white;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #e6e6e6;
+}
+
+thead tr th:first-child {
+    border-top-left-radius: 10px;
+}
+
+thead tr th:last-child {
+    border-top-right-radius: 10px;
+}
+
+tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 10px;
+}
+
+tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 10px;
+}
+
+table select,
+table input[type="number"],
+table input[type="date"] {
+    border: none;
+    background: transparent;
+    font-size: 8px;
+    width: 100%;
+    padding: 2px 4px;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+table select {
+    background: transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='5'><path d='M0 0 L8 0 L4 5 Z' fill='black'/></svg>") no-repeat right 4px center;
+}
+
+table select:focus,
+table input[type="date"]:focus,
+table input[type="number"]:focus {
+    outline: none;
+    border-bottom: 1px solid #10069f;
+}
+
+table input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(30%);
+    opacity: 0.6;
+}
