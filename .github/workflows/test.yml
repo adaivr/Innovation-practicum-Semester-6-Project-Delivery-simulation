@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    container:
+      image: python:3.11-slim
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install system dependencies
+      run: |
+        apt-get update
+        apt-get install -y build-essential gdal-bin libgdal-dev
+
+    - name: Create virtual environment and install dependencies
+      run: |
+        python -m venv venv
+        . venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests with coverage
+      run: |
+        . venv/bin/activate
+        export FLASK_APP=run.py
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        pytest --cov=app --cov-fail-under=94 tests/
+
+    - name: Show coverage report
+      run: |
+        . venv/bin/activate
+        export FLASK_APP=run.py
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        pytest --cov=app --cov-report=term-missing
