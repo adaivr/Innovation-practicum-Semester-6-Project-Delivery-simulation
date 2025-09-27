@@ -10,22 +10,28 @@ async function fetchJSON(url, options = {}) {
 // Создание сайта
 // -------------------------
 let cities = [];
+let updating = false;
+let currentDateCache = null;
 
 async function getCities() {
-    return await fetchJSON('/cities');
+    const data = await fetchJSON('/cities');
+    return data.map(city => city.cityName);
 }
 
 async function main() {
     cities = await getCities();
-    await updateMap();
-    await updateDate();
-    await updateTable();
+    await updateDate(0);
+    await Promise.all([updateMap(), updateTable()]);
 }
 
 async function updateAll(shift = 0) {
+    if (updating) return;
+    updating = true;
+    
     await updateDate(shift);
-    await updateMap();
-    await updateTable();
+    await Promise.all([updateMap(), updateTable()]);
+    
+    updating = false;
 }
 
 main();
@@ -41,20 +47,18 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 10
 }).addTo(map);
 
+let mapLayers = {
+    routes: L.layerGroup().addTo(map),
+    cities: L.layerGroup().addTo(map),
+    orders: L.layerGroup().addTo(map)
+};
+
 async function getMapData() {
     return await fetchJSON('/map');
 }
 
 function clearMapLayers() {
-    map.eachLayer(layer => {
-        if (
-            layer instanceof L.Polyline ||
-            layer instanceof L.CircleMarker ||
-            layer instanceof L.Rectangle
-        ) {
-            map.removeLayer(layer);
-        }
-    });
+    Object.values(mapLayers).forEach(layer => layer.clearLayers());
 }
 
 function drawMap(data) {
@@ -66,7 +70,7 @@ function drawMap(data) {
             color: '#10069f',
             weight: 4,
             opacity: 0.5
-        }).addTo(map);
+        }).addTo(mapLayers.routes);
     });
 
     // Города
@@ -78,7 +82,7 @@ function drawMap(data) {
             weight: 2,
             fillOpacity: 0.8
         })
-            .addTo(map)
+            .addTo(mapLayers.cities)
             .bindTooltip(city.cityName, {
                 direction: 'top',
                 offset: [0, -5],
@@ -88,18 +92,19 @@ function drawMap(data) {
 
     // Заказы
     data.orders.forEach(order => {
-        const lonSize = 0.2, latSize = 0.12;
-        const bounds = [
-            [order.orderLat - latSize, order.orderLon - lonSize],
+        const lonSize = 0.3, latSize = 0.3;
+        const triangle = [
+            [order.orderLat, order.orderLon],
+            [order.orderLat + latSize, order.orderLon - lonSize],
             [order.orderLat + latSize, order.orderLon + lonSize]
         ];
-        L.rectangle(bounds, {
+        L.polygon(triangle, {
             color: "#3cb371",
             weight: 2,
             fillColor: "#3cb371",
             fillOpacity: 0.8
         })
-            .addTo(map)
+            .addTo(mapLayers.orders)
             .bindTooltip(
                 `<b>Заказ №${order.orderId}</b><br>${order.fromName} - ${order.toName}`,
                 { direction: 'top', offset: [0, -5], className: 'custom-tooltip' }
@@ -116,11 +121,17 @@ async function updateMap() {
 // Дата
 // ------------------------
 async function shiftDate(shift = 0) {
+    if (shift === 0 && currentDateCache) {
+        return currentDateCache;
+    }
+    
     const data = await fetchJSON('/date', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: shift })
     });
+    
+    currentDateCache = data.date;
     return data.date;
 }
 
@@ -140,18 +151,19 @@ function createOptions(options, selected) {
     `).join("");
 }
 
-async function createOrderRow(order) {
-    const str = await shiftDate();
-    const [day, month, year] = str.split('.').map(Number);
-    const date = new Date(year, month - 1, day);
+function createOrderRow(order, currentDateStr) {
+    const [day, month, year] = currentDateStr.split('.').map(Number);
+    const date = new Date(year, month - 1, day + 1);
+    const minDate = date.toISOString().split('T')[0];
+    
     const tr = document.createElement("tr");
     tr.innerHTML = `
         <td></td>
-        <td><select class="fromName">${createOptions(cities.map(c => c), order.fromName)}</select></td>
-        <td><select class="toName">${createOptions(cities.map(c => c), order.toName)}</select></td>
+        <td><select class="fromName">${createOptions(cities, order.fromName)}</select></td>
+        <td><select class="toName">${createOptions(cities, order.toName)}</select></td>
         <td><select class="orderClass">${createOptions(["Скорая", "Стандарт"], order.orderClass)}</select></td>
-        <td><select class="weight">${createOptions([5, 10, 50, 100], order.weight)}</select></td>
-        <td><input type="date" class="startDate" value="${order.startDate || ''}" min="${date.toISOString().split('T')[0]}"></td>
+        <td><select class="weight">${createOptions([1, 2, 3, 4, 5], order.weight)}</select></td>
+        <td><input type="date" class="startDate" value="${order.startDate || ''}" min="${minDate}"></td>
         <td></td>
         <td></td>
         <td></td>
@@ -162,7 +174,7 @@ async function createOrderRow(order) {
     startDateInput.addEventListener("keydown", e => e.preventDefault());
     startDateInput.addEventListener("change", e => {
         order.startDate = e.target.value || null;
-        if (e.target.value < date) e.target.value = date;
+        if (e.target.value < minDate) e.target.value = minDate;
     });
 
     tr.querySelector(".fromName").addEventListener("change", e => order.fromName = e.target.value || null);
@@ -180,14 +192,14 @@ async function createOrderRow(order) {
 function createOldOrderRow(order) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-        <td>${order.id}</td>
+        <td>${order.orderId}</td>
         <td>${order.fromName || ""}</td>
         <td>${order.toName || ""}</td>
         <td>${order.orderClass || ""}</td>
         <td>${order.weight || ""}</td>
         <td>${order.startDate || ""}</td>
         <td>${order.expectedDate || ""}</td>
-        <td>${order.status || ""}</td>
+        <td>${order.orderStatus || ""}</td>
         <td>${order.delay || ""}</td>
         <td></td>
     `;
@@ -196,14 +208,23 @@ function createOldOrderRow(order) {
 
 async function updateTable() {
     const tbody = document.querySelector("#ordersTable tbody");
+    const currentDateStr = await shiftDate();
+    
+    const [oldOrdersData, newRowsFragment] = await Promise.all([
+        fetchJSON('/orders'),
+        (async () => {
+            const fragment = document.createDocumentFragment();
+            for (const order of orders) {
+                fragment.appendChild(createOrderRow(order, currentDateStr));
+            }
+            return fragment;
+        })()
+    ]);
+
     tbody.innerHTML = "";
-
-    for (const order of orders) {
-        tbody.appendChild(await createOrderRow(order));
-    }
-
-    const oldOrders = await fetchJSON('/orders');
-    oldOrders.forEach(order => {
+    tbody.appendChild(newRowsFragment);
+    
+    oldOrdersData.forEach(order => {
         tbody.appendChild(createOldOrderRow(order));
     });
 }
@@ -213,6 +234,7 @@ async function updateTable() {
 // -------------------------
 let orders = [];
 let simulationActive = false;
+let simulationRunning = false;
 
 async function sendOrders() {
     const newOrders = orders.filter(o =>
@@ -222,8 +244,11 @@ async function sendOrders() {
         o.weight &&
         o.startDate
     );
+    
     orders = [];
+    
     if (newOrders.length === 0) return;
+    
     await fetchJSON('/send', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -231,15 +256,16 @@ async function sendOrders() {
     });
 }
 
-async function simulationStep() {
-    await fetchJSON('/step');
-    await updateAll(1);
-}
-
 async function runSimulation() {
-    if (!simulationActive) return;
-    await simulationStep();
-    setTimeout(runSimulation, 100);
+    if (simulationRunning) return;
+    simulationRunning = true;
+
+    while (simulationActive) {
+        await updateAll(1);
+        await new Promise(r => setTimeout(r, 50));
+    }
+
+    simulationRunning = false;
 }
 
 async function invertSimulation() {
@@ -248,7 +274,7 @@ async function invertSimulation() {
         simulationBtn.innerText = "Остановить симуляцию";
         simulationBtn.classList.replace("btn-blue", "btn-orange");
         await sendOrders();
-        await runSimulation();
+        runSimulation();
     } else {
         simulationBtn.innerText = "Запустить симуляцию";
         simulationBtn.classList.replace("btn-orange", "btn-blue");
@@ -283,7 +309,7 @@ async function prevDate() {
 async function nextDate() {
     await stopSimulation();
     await sendOrders();
-    await simulationStep();
+    await updateAll(1);
 }
 
 async function addOrder() {
@@ -295,9 +321,8 @@ async function addOrder() {
         weight: null,
         startDate: null,
     });
-    await updateAll();
+    await updateTable();
 }
-
 
 async function deleteAllOrders() {
     await stopSimulation();
