@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "delivery_simulation"
+version = "0.1.0"
+description = "simulate delivery"
+authors = [
+    { name = "adaivr", email = "adaivr@mail.ru" }
+]
+dependencies = [
+    "Flask",
+    "Flask-SQLAlchemy",
+    "Flask-Testing",
+    "pandas",
+    "pytest",
+    "pytest-cov",
+    "geopy",
+    "geopandas",
+    "pyogrio"
+]
