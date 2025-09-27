@@ -3,7 +3,6 @@ from flask_testing import TestCase
 from app import create_app
 from app.extensions import db
 from app.models import City
-from flask import Flask
 
 
 class TestRoutes(TestCase):

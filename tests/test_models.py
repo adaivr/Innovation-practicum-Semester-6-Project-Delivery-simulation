@@ -1,13 +1,12 @@
 import math
 import pandas as pd
 import unittest
+import app.models as models
+from app.extensions import db
 from datetime import date, timedelta
 from flask import Flask
 from flask_testing import TestCase
 from unittest import mock
-
-from app.extensions import db
-import app.models as models
 
 
 class TestModels(TestCase):
