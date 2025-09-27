@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Logistics Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+<body>
+    <div id="map"></div>
+
+    <div id="control-panel">
+        <div class="top-panel">
+            <button id="simulationBtn" class="btn-blue">Запустить симуляцию</button>
+            <div class="date-block">
+                <span class="date-label">Текущая дата:</span>
+                <button id="prevDateBtn" class="btn-arrow"><</button>
+                <span id="currentDate"></span>
+                <button id="nextDateBtn" class="btn-arrow">></button>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin: 15px 0;">
+            <button id="addOrderBtn" class="btn-neworder">Новый заказ</button>
+            <button id="deleteAllOrdersBtn" class="btn-delete">Удалить все</button>
+        </div>
+
+        <table id="ordersTable">
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Откуда</th>
+                    <th>Куда</th>
+                    <th>Доставка</th>
+                    <th>Вес</th>
+                    <th>Отправление</th>
+                    <th>Ожидаемое прибытие</th>
+                    <th>Статус</th>
+                    <th>Опоздание</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</body>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+</html>
