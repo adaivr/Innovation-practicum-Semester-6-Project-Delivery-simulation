@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 DATE_FILE = "data/date.json"
 SIMULATION_STEP = 1
-SIMULATION_SPEED = 100
+SIMULATION_SPEED = 30
 CURRENT_DATE = date.today()
 
 
